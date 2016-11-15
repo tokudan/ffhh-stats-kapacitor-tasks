@@ -1,0 +1,116 @@
+ID: freifunk_nodes_l2
+Error: 
+Template: 
+Type: stream
+Status: enabled
+Executing: true
+Created: 06 Nov 16 12:38 CET
+Modified: 06 Nov 16 13:10 CET
+LastEnabled: 06 Nov 16 13:10 CET
+Databases Retention Policies: ["freifunk"."l1" "freifunk"."l2"]
+TICKscript:
+var l1_nodes = stream
+    |from()
+        .database('freifunk')
+        .retentionPolicy('l1')
+        .measurement('nodes')
+        .groupBy(*)
+    |window()
+        .period(5m)
+        .every(5m)
+        .align()
+
+var l2_connected_clients = l1_nodes
+    |mean('connected_clients.connected_clients')
+        .as('connected_clients')
+
+var l2_connected_mesh = l1_nodes
+    |mean('connected_mesh.connected_mesh')
+        .as('connected_mesh')
+
+var l2_connected_vpn = l1_nodes
+    |mean('connected_vpn.connected_vpn')
+        .as('connected_vpn')
+
+var l2_stats_online = l1_nodes
+    |mean('stats_online.stats_online')
+        .as('stats_online')
+
+var l2_stats_uptime = l1_nodes
+    |mean('stats_uptime.stats_uptime')
+        .as('stats_uptime')
+
+var l2_usage_loadavg = l1_nodes
+    |mean('usage_loadavg.usage_loadavg')
+        .as('usage_loadavg')
+
+var l2_usage_memory = l1_nodes
+    |mean('usage_memory.usage_memory')
+        .as('usage_memory')
+
+var l2_usage_rootfs = l1_nodes
+    |mean('usage_rootfs.usage_rootfs')
+        .as('usage_rootfs')
+
+var l2_complete = l2_connected_clients
+    |join(l2_connected_mesh, l2_connected_vpn, l2_stats_online, l2_stats_uptime, l2_usage_loadavg, l2_usage_memory, l2_usage_rootfs)
+        .as('connected_clients', 'connected_mesh', 'connected_vpn', 'stats_online', 'stats_uptime', 'usage_loadavg', 'usage_memory', 'usage_rootfs')
+        .delimiter('.')
+        .fill('null')
+
+l2_complete
+    |influxDBOut()
+        .database('freifunk')
+        .retentionPolicy('l2')
+        .measurement('nodes')
+        .precision('s')
+
+DOT:
+digraph freifunk_nodes_l2 {
+graph [throughput="0.00 points/s"];
+
+stream0 [avg_exec_time_ns="0" ];
+stream0 -> from1 [processed="6139875"];
+
+from1 [avg_exec_time_ns="176.034µs" ];
+from1 -> window2 [processed="5083219"];
+
+window2 [avg_exec_time_ns="37.646µs" ];
+window2 -> mean10 [processed="1056656"];
+window2 -> mean9 [processed="1056656"];
+window2 -> mean8 [processed="1056656"];
+window2 -> mean7 [processed="1056656"];
+window2 -> mean6 [processed="1056656"];
+window2 -> mean5 [processed="1056656"];
+window2 -> mean4 [processed="1056656"];
+window2 -> mean3 [processed="1056656"];
+
+mean10 [avg_exec_time_ns="231.074µs" ];
+mean10 -> join18 [processed="1056656"];
+
+mean9 [avg_exec_time_ns="241.709µs" ];
+mean9 -> join18 [processed="1056656"];
+
+mean8 [avg_exec_time_ns="107.211µs" ];
+mean8 -> join18 [processed="1056656"];
+
+mean7 [avg_exec_time_ns="177.669µs" ];
+mean7 -> join18 [processed="1056656"];
+
+mean6 [avg_exec_time_ns="185.215µs" ];
+mean6 -> join18 [processed="1056656"];
+
+mean5 [avg_exec_time_ns="262.593µs" ];
+mean5 -> join18 [processed="1056656"];
+
+mean4 [avg_exec_time_ns="265.956µs" ];
+mean4 -> join18 [processed="1056656"];
+
+mean3 [avg_exec_time_ns="311.34µs" ];
+mean3 -> join18 [processed="1056656"];
+
+join18 [avg_exec_time_ns="425.546µs" ];
+join18 -> influxdb_out19 [processed="1056656"];
+
+influxdb_out19 [avg_exec_time_ns="145.971µs" points_written="1056656" write_errors="0" ];
+}

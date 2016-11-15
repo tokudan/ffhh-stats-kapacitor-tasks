@@ -1,0 +1,31 @@
+var wirerrd = stream 
+    |from()
+    	.database('freifunk')
+	.retentionPolicy('l2')
+	.measurement('wirerrd')
+	.groupBy(*)
+var wirerrd_numbytes = wirerrd
+    |window()
+    	.period(15m)
+	.every(15m)
+	.align()
+    |mean('wirerrd_numbytes.wirerrd_numbytes')
+    	.as('wirerrd_numbytes')
+var wirerrd_numpackets = wirerrd
+    |window()
+    	.period(15m)
+	.every(15m)
+	.align()
+    |mean('wirerrd_numpackets.wirerrd_numpackets')
+    	.as('wirerrd_numpackets')
+
+wirerrd_numbytes
+    |join(wirerrd_numpackets)
+	.as('wirerrd_numbytes', 'wirerrd_numpackets')
+	.fill('null')
+    |influxDBOut()
+        .database('freifunk')
+        .retentionPolicy('l3')
+        .measurement('wirerrd')
+        .precision('s')
+

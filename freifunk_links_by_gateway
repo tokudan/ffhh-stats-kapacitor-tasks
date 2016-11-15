@@ -1,0 +1,108 @@
+var gw_links = stream 
+    |from()
+    	.database('freifunk')
+	.retentionPolicy('l0')
+	.measurement('links')
+	.where(lambda: ("targetnode" =~ /^gw|Tor$/) AND ("targetnodeid" =~ /^dead|^gate/))
+	.groupBy('region', 'domain', 'linktype', 'targetnode', 'targetnodeid')
+
+var linkcount = gw_links
+    |window()
+    	.period(1m)
+	.every(1m)
+	.align()
+    |count('tq')
+    	.as('linkcount')
+
+var linkquality = gw_links
+    |window()
+    	.period(1m)
+	.every(1m)
+	.align()
+    |mean('tq')
+    	.as('linkquality')
+
+linkcount
+    |join(linkquality)
+    	.as('linkcount', 'linkquality')
+    |influxDBOut()
+        .database('freifunk')
+        .retentionPolicy('l1')
+        .measurement('links_by_gateway')
+        .precision('s')
+
+var l2_linkcount = linkcount
+    |window()
+    	.period(5m)
+	.every(5m)
+	.align()
+    |mean('linkcount')
+    	.as('linkcount')
+
+var l2_linkquality = linkquality
+    |window()
+    	.period(15m)
+	.every(15m)
+	.align()
+    |mean('linkquality')
+    	.as('linkquality')
+
+l2_linkcount
+    |join(l2_linkquality)
+    	.as('linkcount', 'linkquality')
+    |influxDBOut()
+        .database('freifunk')
+        .retentionPolicy('l2')
+        .measurement('links_by_gateway')
+        .precision('s')
+
+var l3_linkcount = linkcount
+    |window()
+    	.period(5m)
+	.every(5m)
+	.align()
+    |mean('linkcount')
+    	.as('linkcount')
+
+var l3_linkquality = linkquality
+    |window()
+    	.period(15m)
+	.every(15m)
+	.align()
+    |mean('linkquality')
+    	.as('linkquality')
+
+l3_linkcount
+    |join(l3_linkquality)
+    	.as('linkcount', 'linkquality')
+    |influxDBOut()
+        .database('freifunk')
+        .retentionPolicy('l3')
+        .measurement('links_by_gateway')
+        .precision('s')
+
+var l4_linkcount = linkcount
+    |window()
+    	.period(60m)
+	.every(60m)
+	.align()
+    |mean('linkcount')
+    	.as('linkcount')
+
+var l4_linkquality = linkquality
+    |window()
+    	.period(60m)
+	.every(60m)
+	.align()
+    |mean('linkquality')
+    	.as('linkquality')
+
+l4_linkcount
+    |join(l4_linkquality)
+    	.as('linkcount', 'linkquality')
+    |influxDBOut()
+        .database('freifunk')
+        .retentionPolicy('l4')
+        .measurement('links_by_gateway')
+        .precision('s')
+

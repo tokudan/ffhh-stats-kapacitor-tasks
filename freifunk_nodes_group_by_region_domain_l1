@@ -1,0 +1,52 @@
+var l0_nodes_group_by_region_domain = stream 
+    |from()
+    	.database('freifunk')
+	.retentionPolicy('l0')
+	.measurement('nodes')
+	.groupBy('region', 'domain')
+
+var l1_nodes_group_by_region_domain = l0_nodes_group_by_region_domain
+    |window()
+    	.period(1m)
+	.every(1m)
+	.align()
+
+
+var l1_connected_clients_sum = l1_nodes_group_by_region_domain
+    |sum('connected_clients')
+        .as('connected_clients_sum')
+var l1_connected_mesh_sum = l1_nodes_group_by_region_domain
+    |sum('connected_mesh')
+        .as('connected_mesh_sum')
+var l1_connected_vpn_sum = l1_nodes_group_by_region_domain
+    |sum('connected_vpn')
+        .as('connected_vpn_sum')
+var l1_stats_online_sum = l1_nodes_group_by_region_domain
+    |sum('stats_online')
+        .as('stats_online_sum')
+var l1_stats_uptime_sum = l1_nodes_group_by_region_domain
+    |sum('stats_uptime')
+        .as('stats_uptime_sum')
+var l1_usage_loadavg_mean = l1_nodes_group_by_region_domain
+    |mean('usage_loadavg')
+        .as('usage_loadavg_mean')
+var l1_usage_memory_mean = l1_nodes_group_by_region_domain
+    |mean('usage_memory')
+        .as('usage_memory_mean')
+var l1_usage_rootfs_mean = l1_nodes_group_by_region_domain
+    |mean('usage_rootfs')
+        .as('usage_rootfs_mean')
+
+
+// Merge the L1 data and send to influxdb
+l1_connected_clients_sum
+    |join(l1_connected_mesh_sum, l1_connected_vpn_sum, l1_stats_online_sum, l1_stats_uptime_sum, l1_usage_loadavg_mean, l1_usage_memory_mean, l1_usage_rootfs_mean)
+    	.as('connected_clients_sum', 'connected_mesh_sum', 'connected_vpn_sum', 'stats_online_sum', 'stats_uptime_sum', 'usage_loadavg_mean', 'usage_memory_mean', 'usage_rootfs_mean')
+	.delimiter('.')
+	.fill('null')
+    |influxDBOut()
+        .database('freifunk')
+        .retentionPolicy('l1')
+        .measurement('nodes_group_by_region_domain')
+        .precision('s')
+

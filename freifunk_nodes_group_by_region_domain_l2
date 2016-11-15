@@ -1,0 +1,50 @@
+var l1_nodes_group_by_region_domain = stream 
+    |from()
+    	.database('freifunk')
+	.retentionPolicy('l1')
+	.measurement('nodes_group_by_region_domain')
+	.groupBy('region', 'domain')
+    |window()
+    	.period(5m)
+	.every(5m)
+	.align()
+
+
+var l2_connected_clients_sum = l1_nodes_group_by_region_domain
+    |mean('connected_clients_sum.connected_clients_sum')
+        .as('connected_clients_sum')
+var l2_connected_mesh_sum = l1_nodes_group_by_region_domain
+    |mean('connected_mesh_sum.connected_mesh_sum')
+        .as('connected_mesh_sum')
+var l2_connected_vpn_sum = l1_nodes_group_by_region_domain
+    |mean('connected_vpn_sum.connected_vpn_sum')
+        .as('connected_vpn_sum')
+var l2_stats_online_sum = l1_nodes_group_by_region_domain
+    |mean('stats_online_sum.stats_online_sum')
+        .as('stats_online_sum')
+var l2_stats_uptime_sum = l1_nodes_group_by_region_domain
+    |mean('stats_uptime_sum.stats_uptime_sum')
+        .as('stats_uptime_sum')
+var l2_usage_loadavg_mean = l1_nodes_group_by_region_domain
+    |mean('usage_loadavg_mean.usage_loadavg_mean')
+        .as('usage_loadavg_mean')
+var l2_usage_memory_mean = l1_nodes_group_by_region_domain
+    |mean('usage_memory_mean.usage_memory_mean')
+        .as('usage_memory_mean')
+var l2_usage_rootfs_mean = l1_nodes_group_by_region_domain
+    |mean('usage_rootfs_mean.usage_rootfs_mean')
+        .as('usage_rootfs_mean')
+
+
+var l2_complete = l2_connected_clients_sum
+    |join(l2_connected_mesh_sum, l2_connected_vpn_sum, l2_stats_online_sum, l2_stats_uptime_sum, l2_usage_loadavg_mean, l2_usage_memory_mean, l2_usage_rootfs_mean)
+    	.as('connected_clients_sum', 'connected_mesh_sum', 'connected_vpn_sum', 'stats_online_sum', 'stats_uptime_sum', 'usage_loadavg_mean', 'usage_memory_mean', 'usage_rootfs_mean')
+	.delimiter('.')
+	.fill('null')
+
+l2_complete
+    |influxDBOut()
+        .database('freifunk')
+        .retentionPolicy('l2')
+        .measurement('nodes_group_by_region_domain')
+        .precision('s')

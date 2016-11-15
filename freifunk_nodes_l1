@@ -1,0 +1,118 @@
+var nodes = stream 
+    |from()
+    	.database('freifunk')
+	.retentionPolicy('l0')
+	.measurement('nodes')
+	.groupBy(*)
+    |window()
+    	.period(1m)
+	.every(1m)
+	.align()
+
+
+var connected_clients = nodes
+    |mean('connected_clients')
+        .as('connected_clients')
+var connected_mesh = nodes
+    |mean('connected_mesh')
+        .as('connected_mesh')
+var connected_vpn = nodes
+    |mean('connected_vpn')
+        .as('connected_vpn')
+var stats_online = nodes
+    |mean('stats_online')
+        .as('stats_online')
+var stats_uptime = nodes
+    |mean('stats_uptime')
+        .as('stats_uptime')
+var usage_loadavg = nodes
+    |mean('usage_loadavg')
+        .as('usage_loadavg')
+var usage_memory = nodes
+    |mean('usage_memory')
+        .as('usage_memory')
+var usage_rootfs = nodes
+    |mean('usage_rootfs')
+        .as('usage_rootfs')
+//var traffic_batman_forward_bytes = nodes
+    //|mean('traffic_batman_forward_bytes')
+        //.as('traffic_batman_forward_bytes')
+//var traffic_batman_forward_bytes_derivative = nodes
+    //|derivative('traffic_batman_forward_bytes')
+    	//.nonNegative()
+	//.as('traffic_batman_forward_bytes_derivative')
+//var traffic_batman_mgmtrx_bytes = nodes
+    //|mean('traffic_batman_mgmtrx_bytes')
+        //.as('traffic_batman_mgmtrx_bytes')
+//var traffic_batman_mgmtrx_bytes_derivative = nodes
+    //|derivative('traffic_batman_mgmtrx_bytes')
+    	//.nonNegative()
+	//.as('traffic_batman_mgmtrx_bytes_derivative')
+//var traffic_batman_mgmttx_bytes = nodes
+    //|mean('traffic_batman_mgmttx_bytes')
+        //.as('traffic_batman_mgmttx_bytes')
+//var traffic_batman_mgmttx_bytes_derivative = nodes
+    //|derivative('traffic_batman_mgmttx_bytes')
+    	//.nonNegative()
+	//.as('traffic_batman_mgmttx_bytes_derivative')
+//var traffic_batman_rx_bytes = nodes
+    //|mean('traffic_batman_rx_bytes')
+        //.as('traffic_batman_rx_bytes')
+//var traffic_batman_rx_bytes_derivative = nodes
+    //|derivative('traffic_batman_rx_bytes')
+    	//.nonNegative()
+	//.as('traffic_batman_rx_bytes_derivative')
+//var traffic_batman_tx_bytes = nodes
+    //|mean('traffic_batman_tx_bytes')
+        //.as('traffic_batman_tx_bytes')
+//var traffic_batman_tx_bytes_derivative = nodes
+    //|derivative('traffic_batman_tx_bytes')
+    	//.nonNegative()
+	//.as('traffic_batman_tx_bytes_derivative')
+
+
+// Merge the data and send to influxdb
+connected_clients
+    |join(connected_mesh,
+		connected_vpn,
+		stats_online,
+		stats_uptime,
+		usage_loadavg,
+		usage_memory,
+		usage_rootfs
+		//traffic_batman_forward_bytes,
+		//traffic_batman_forward_bytes_derivative,
+		//traffic_batman_mgmtrx_bytes,
+		//traffic_batman_mgmtrx_bytes_derivative,
+		//traffic_batman_mgmttx_bytes,
+		//traffic_batman_mgmttx_bytes_derivative,
+		//traffic_batman_rx_bytes,
+		//traffic_batman_rx_bytes_derivative,
+		//traffic_batman_tx_bytes
+		//traffic_batman_tx_bytes_derivative
+		)
+    	.as('connected_clients',
+		'connected_mesh',
+		'connected_vpn',
+		'stats_online',
+		'stats_uptime',
+		'usage_loadavg',
+		'usage_memory',
+		'usage_rootfs'
+		//'traffic_batman_forward_bytes',
+		//'traffic_batman_forward_bytes_derivative',
+		//'traffic_batman_mgmtrx_bytes',
+		//'traffic_batman_mgmtrx_bytes_derivative',
+		//'traffic_batman_mgmttx_bytes',
+		//'traffic_batman_mgmttx_bytes_derivative',
+		//'traffic_batman_rx_bytes',
+		//'traffic_batman_rx_bytes_derivative',
+		//'traffic_batman_tx_bytes'
+		//'traffic_batman_tx_bytes_derivative'
+		)
+    |influxDBOut()
+        .database('freifunk')
+        .retentionPolicy('l1')
+        .measurement('nodes')
+        .precision('s')
+

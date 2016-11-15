@@ -1,0 +1,23 @@
+var l0_links = stream 
+    |from()
+    	.database('freifunk')
+	.retentionPolicy('l0')
+	.measurement('links')
+	.groupBy('region', 'domain', 'linktype', 'sourcenode', 'sourcenodeid', 'targetnode', 'targetnodeid')
+
+var l1_links = l0_links
+    |window()
+    	.period(1m)
+	.every(1m)
+	.align()
+
+
+var l1_tq = l1_links
+    |mean('tq')
+        .as('tq.tq')
+    |influxDBOut()
+        .database('freifunk')
+        .retentionPolicy('l1')
+        .measurement('links')
+        .precision('s')
+

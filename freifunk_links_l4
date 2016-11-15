@@ -1,0 +1,18 @@
+stream 
+    |from()
+    	.database('freifunk')
+	.retentionPolicy('l3')
+	.measurement('links')
+	.groupBy(*)
+    |window()
+    	.period(5m)
+	.every(5m)
+	.align()
+    |mean('tq.tq')
+        .as('tq.tq')
+    |influxDBOut()
+        .database('freifunk')
+        .retentionPolicy('l4')
+        .measurement('links')
+        .precision('s')
+
