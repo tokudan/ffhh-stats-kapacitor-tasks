@@ -1,14 +1,3 @@
-ID: freifunk_nodes_l3
-Error: 
-Template: 
-Type: stream
-Status: enabled
-Executing: true
-Created: 06 Nov 16 12:42 CET
-Modified: 06 Nov 16 13:10 CET
-LastEnabled: 06 Nov 16 13:10 CET
-Databases Retention Policies: ["freifunk"."l2" "freifunk"."l3"]
-TICKscript:
 var l2_nodes = stream
     |from()
         .database('freifunk')
@@ -64,53 +53,3 @@ l3_complete
         .retentionPolicy('l3')
         .measurement('nodes')
         .precision('s')
-
-DOT:
-digraph freifunk_nodes_l3 {
-graph [throughput="0.00 points/s"];
-
-stream0 [avg_exec_time_ns="0" ];
-stream0 -> from1 [processed="2110561"];
-
-from1 [avg_exec_time_ns="97.447µs" ];
-from1 -> window2 [processed="1056656"];
-
-window2 [avg_exec_time_ns="22.4µs" ];
-window2 -> mean10 [processed="1053905"];
-window2 -> mean9 [processed="1053905"];
-window2 -> mean8 [processed="1053905"];
-window2 -> mean7 [processed="1053905"];
-window2 -> mean6 [processed="1053905"];
-window2 -> mean5 [processed="1053905"];
-window2 -> mean4 [processed="1053905"];
-window2 -> mean3 [processed="1053905"];
-
-mean10 [avg_exec_time_ns="90.858µs" ];
-mean10 -> join18 [processed="1053905"];
-
-mean9 [avg_exec_time_ns="85.586µs" ];
-mean9 -> join18 [processed="1053905"];
-
-mean8 [avg_exec_time_ns="113.602µs" ];
-mean8 -> join18 [processed="1053905"];
-
-mean7 [avg_exec_time_ns="6.847127ms" ];
-mean7 -> join18 [processed="1053905"];
-
-mean6 [avg_exec_time_ns="139.523µs" ];
-mean6 -> join18 [processed="1053905"];
-
-mean5 [avg_exec_time_ns="93.48µs" ];
-mean5 -> join18 [processed="1053905"];
-
-mean4 [avg_exec_time_ns="160.547µs" ];
-mean4 -> join18 [processed="1053905"];
-
-mean3 [avg_exec_time_ns="118.469µs" ];
-mean3 -> join18 [processed="1053905"];
-
-join18 [avg_exec_time_ns="4.122472ms" ];
-join18 -> influxdb_out19 [processed="1053905"];
-
-influxdb_out19 [avg_exec_time_ns="192.86µs" points_written="1053905" write_errors="0" ];
-}
