@@ -1,55 +1,100 @@
 var l3_nodes = stream
-    |from()
-        .database('freifunk')
-        .retentionPolicy('l3')
-        .measurement('nodes')
-        .groupBy(*)
-    |window()
-        .period(5m)
-        .every(5m)
-        .align()
+	|from()
+		.database('freifunk')
+		.retentionPolicy('l3')
+		.measurement('nodes')
+		.groupBy(*)
+	|window()
+		.period(1h)
+		.every(1h)
+		.align()
 
 var l4_connected_clients = l3_nodes
-    |mean('connected_clients.connected_clients')
-        .as('connected_clients')
+	|mean('connected_clients.connected_clients')
+		.as('connected_clients')
 
 var l4_connected_mesh = l3_nodes
-    |mean('connected_mesh.connected_mesh')
-        .as('connected_mesh')
+	|mean('connected_mesh.connected_mesh')
+		.as('connected_mesh')
 
 var l4_connected_vpn = l3_nodes
-    |mean('connected_vpn.connected_vpn')
-        .as('connected_vpn')
+	|mean('connected_vpn.connected_vpn')
+		.as('connected_vpn')
 
 var l4_stats_online = l3_nodes
-    |mean('stats_online.stats_online')
-        .as('stats_online')
+	|mean('stats_online.stats_online')
+		.as('stats_online')
 
 var l4_stats_uptime = l3_nodes
-    |mean('stats_uptime.stats_uptime')
-        .as('stats_uptime')
+	|mean('stats_uptime.stats_uptime')
+		.as('stats_uptime')
 
 var l4_usage_loadavg = l3_nodes
-    |mean('usage_loadavg.usage_loadavg')
-        .as('usage_loadavg')
+	|mean('usage_loadavg.usage_loadavg')
+		.as('usage_loadavg')
 
 var l4_usage_memory = l3_nodes
-    |mean('usage_memory.usage_memory')
-        .as('usage_memory')
+	|mean('usage_memory.usage_memory')
+		.as('usage_memory')
 
 var l4_usage_rootfs = l3_nodes
-    |mean('usage_rootfs.usage_rootfs')
-        .as('usage_rootfs')
+	|mean('usage_rootfs.usage_rootfs')
+		.as('usage_rootfs')
+
+var l4_traffic_batman_forward_bytes = l3_nodes
+	|mean('traffic_batman_forward_bytes.traffic_batman_forward_bytes')
+		.as('traffic_batman_forward_bytes')
+
+var l4_traffic_batman_mgmtrx_bytes = l3_nodes
+	|mean('traffic_batman_mgmtrx_bytes.traffic_batman_mgmtrx_bytes')
+		.as('traffic_batman_mgmtrx_bytes')
+
+var l4_traffic_batman_mgmttx_bytes = l3_nodes
+	|mean('traffic_batman_mgmttx_bytes.traffic_batman_mgmttx_bytes')
+		.as('traffic_batman_mgmttx_bytes')
+
+var l4_traffic_batman_rx_bytes = l3_nodes
+	|mean('traffic_batman_rx_bytes.traffic_batman_rx_bytes')
+		.as('traffic_batman_rx_bytes')
+
+var l4_traffic_batman_tx_bytes = l3_nodes
+	|mean('traffic_batman_tx_bytes.traffic_batman_tx_bytes')
+		.as('traffic_batman_tx_bytes')
 
 var l4_complete = l4_connected_clients
-    |join(l4_connected_mesh, l4_connected_vpn, l4_stats_online, l4_stats_uptime, l4_usage_loadavg, l4_usage_memory, l4_usage_rootfs)
-        .as('connected_clients', 'connected_mesh', 'connected_vpn', 'stats_online', 'stats_uptime', 'usage_loadavg', 'usage_memory', 'usage_rootfs')
-        .delimiter('.')
-        .fill('null')
+	|join(l4_connected_mesh,
+		l4_connected_vpn,
+		l4_stats_online,
+		l4_stats_uptime,
+		l4_usage_loadavg,
+		l4_usage_memory,
+		l4_usage_rootfs,
+		l4_traffic_batman_forward_bytes,
+		l4_traffic_batman_mgmtrx_bytes,
+		l4_traffic_batman_mgmttx_bytes,
+		l4_traffic_batman_rx_bytes,
+		l4_traffic_batman_tx_bytes
+		)
+		.as('connected_clients',
+			'connected_mesh',
+			'connected_vpn',
+			'stats_online',
+			'stats_uptime',
+			'usage_loadavg',
+			'usage_memory',
+			'usage_rootfs',
+			'traffic_batman_forward_bytes',
+			'traffic_batman_mgmtrx_bytes',
+			'traffic_batman_mgmttx_bytes',
+			'traffic_batman_rx_bytes',
+			'traffic_batman_tx_bytes'
+			)
+		.delimiter('.')
+		.fill('null')
 
 l4_complete
-    |influxDBOut()
-        .database('freifunk')
-        .retentionPolicy('l4')
-        .measurement('nodes')
-        .precision('s')
+	|influxDBOut()
+		.database('freifunk')
+		.retentionPolicy('l4')
+		.measurement('nodes')
+		.precision('s')
