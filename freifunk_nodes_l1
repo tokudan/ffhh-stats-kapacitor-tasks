@@ -90,4 +90,3 @@ connected_clients
 		.retentionPolicy('l1')
 		.measurement('nodes')
 		.precision('s')
-
